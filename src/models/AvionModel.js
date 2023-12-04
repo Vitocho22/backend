@@ -1,74 +1,40 @@
-// src/controllers/AvionController.js
-const AvionModel = require('../models/AvionModel');
+// src/models/AvionModel.js
+const db = require('../utils/db');
 
-const getAllAviones = async (req, res) => {
-    try {
-        const aviones = await AvionModel.getAllAviones();
-        res.json(aviones);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Error al obtener la lista de aviones' });
-    }
+const getAllAviones = async () => {
+    const query = 'SELECT * FROM aviones';
+    const result = await db.query(query);
+    return result;
 };
 
-const getAvionByCodigo = async (req, res) => {
-    const codigo = req.params.codigo;
-    try {
-        const avion = await AvionModel.getByAvionCodigo(codigo);
-        if (!avion) {
-            return res.status(404).json({ error: 'Avión no encontrado' });
-        }
-        res.json(avion);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Error al obtener el avión' });
-    }
+const getByAvionCodigo = async (codigo) => {
+    const query = 'SELECT * FROM aviones WHERE codigo = ?';
+    const result = await db.query(query, [codigo]);
+    return result[0];
 };
 
-const createAvion = async (req, res) => {
-    const { codigo, tipo, manteniendo, baseCodigo } = req.body;
-    try {
-        const avionId = await AvionModel.insertAvion(codigo, tipo, manteniendo, baseCodigo);
-        res.json({ avionId });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Error al crear el avión' });
-    }
+const insertAvion = async (codigo, tipo, baseRevision) => {
+    const query = 'INSERT INTO aviones (codigo, tipo, base_revision) VALUES (?, ?, ?)';
+    const result = await db.query(query, [codigo, tipo, baseRevision]);
+    return result.insertId;
 };
 
-const updateAvion = async (req, res) => {
-    const codigo = req.params.codigo;
-    const { tipo, manteniendo, baseCodigo } = req.body;
-    try {
-        const affectedRows = await AvionModel.updateAvion(codigo, tipo, manteniendo, baseCodigo);
-        if (affectedRows === 0) {
-            return res.status(404).json({ error: 'Avión no encontrado' });
-        }
-        res.json({ success: true });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Error al actualizar el avión' });
-    }
+const updateAvion = async (codigo, tipo, baseRevision) => {
+    const query = 'UPDATE aviones SET tipo = ?, base_revision = ? WHERE codigo = ?';
+    const result = await db.query(query, [tipo, baseRevision, codigo]);
+    return result.affectedRows;
 };
 
-const deleteAvion = async (req, res) => {
-    const codigo = req.params.codigo;
-    try {
-        const affectedRows = await AvionModel.deleteByAvionCodigo(codigo);
-        if (affectedRows === 0) {
-            return res.status(404).json({ error: 'Avión no encontrado' });
-        }
-        res.json({ success: true });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Error al eliminar el avión' });
-    }
+const deleteByAvionCodigo = async (codigo) => {
+    const query = 'DELETE FROM aviones WHERE codigo = ?';
+    const result = await db.query(query, [codigo]);
+    return result.affectedRows;
 };
 
 module.exports = {
     getAllAviones,
-    getAvionByCodigo,
-    createAvion,
+    getByAvionCodigo,
+    insertAvion,
     updateAvion,
-    deleteAvion,
+    deleteByAvionCodigo,
 };
